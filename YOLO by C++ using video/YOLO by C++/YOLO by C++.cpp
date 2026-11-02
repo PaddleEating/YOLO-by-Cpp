@@ -1,5 +1,8 @@
 ﻿
 #include "yolo.h" // 包含YOLO类的头文件
+#include <cstdlib>                     // atoi
+#include <opencv2/videoio.hpp>         // VideoCapture / CAP_MSMF / CAP_DSHOW
+#include <opencv2/core/utils/logger.hpp>  // 临时屏蔽 OpenCV 内部日志
 
 
 
@@ -207,28 +210,86 @@ void YOLO::detect(Mat& frame)
 
 
 
-int main()
+// 依次尝试不同后端与摄像头序号，成功则返回 true
+// Windows 上 OpenCV 的 MSMF 后端在部分机型上会报 "Camera index out of range" 打不开默认摄像头，
+// 因此这里按 MSMF -> DirectShow -> 自动 的顺序，配合 0~5 号设备逐个尝试
+static bool openCamera(VideoCapture& cap, int wantIndex, int& usedIndex, string& usedBackend)
 {
-	// 创建YOLO对象，假设你已经定义了yolo_nets数组，用于存放Net_config结构体
+	struct BackendInfo { int id; const char* name; };
+	static const BackendInfo backends[] = {
+		{ CAP_MSMF,  "MSMF" },
+		{ CAP_DSHOW, "DirectShow" },
+		{ CAP_ANY,   "Auto" }
+	};
+
+	for (int k = 0; k < 3; ++k)
+	{
+		// i = -1 表示先试用户期望的序号，之后扫描 0~5 号设备
+		for (int i = -1; i < 6; ++i)
+		{
+			int idx = (i < 0) ? wantIndex : i;
+			if (i >= 0 && idx == wantIndex) continue;   // 已试过
+
+			cap.release();
+			if (cap.open(idx, backends[k].id))
+			{
+				usedIndex = idx;
+				usedBackend = backends[k].name;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+int main(int argc, char** argv)
+{
+	// 摄像头序号可通过命令行参数指定，例如：YOLO by C++.exe 1
+	int wantIndex = (argc > 1) ? atoi(argv[1]) : 0;
+
+	// 创建YOLO对象（yolo_nets[2] = yolo-fastest，速度最快，适合实时视频检测）
 	YOLO yolo_model(yolo_nets[2]);
 
-	// 打开捕获器（0-系统默认摄像头）
-	VideoCapture cap(0);
-	Mat frame;
+	// 探测期间屏蔽 OpenCV 内部日志：失败的尝试会刷出一堆 ERROR/INFO，容易误导
+	utils::logging::setLogLevel(utils::logging::LOG_LEVEL_SILENT);
 
-	if (!cap.isOpened())
+	VideoCapture cap;
+	int usedIndex = -1;
+	string usedBackend;
+	bool ok = openCamera(cap, wantIndex, usedIndex, usedBackend);
+
+	utils::logging::setLogLevel(utils::logging::LOG_LEVEL_WARNING);
+
+	if (!ok)
 	{
-		cerr << "Cannot open camera";
+		cerr << "Cannot open camera." << endl
+		     << "已尝试：0~5 号设备 x MSMF / DirectShow / Auto 三种后端。" << endl
+		     << "请依次检查：" << endl
+		     << "  1. 摄像头是否被其他程序占用（相机 App、微信、腾讯会议、浏览器网页等）" << endl
+		     << "  2. 设置 -> 隐私和安全性 -> 相机：允许桌面应用访问相机" << endl
+		     << "  3. 设备管理器 -> 摄像头，确认设备存在且未被禁用" << endl
+		     << "  4. 手动指定序号重试：本程序.exe 1" << endl;
 		return -1;
 	}
+
+	cout << "Camera opened: index=" << usedIndex
+	     << ", backend=" << usedBackend << endl
+	     << "Press any key in the window to quit." << endl;
 
 	// 创建窗口用于显示检测结果
 	namedWindow("Object Detection", WINDOW_NORMAL);
 
+	Mat frame;
 	// 循环读取视频帧并进行YOLO检测
 	while (true)
 	{
 		cap.read(frame);
+
+		if (frame.empty())
+		{
+			cerr << "Failed to grab frame, camera disconnected?" << endl;
+			break;
+		}
 
 		// 使用YOLO模型进行目标检测
 		yolo_model.detect(frame);

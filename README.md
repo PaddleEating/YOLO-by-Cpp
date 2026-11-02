@@ -8,7 +8,10 @@
 支持 YOLOv3 / YOLOv4 / YOLOv4-tiny / YOLObile / YOLO-Fastest 五种模型，纯 CPU 推理，无需 CUDA。
 推理与后处理（NMS、置信度过滤、耗时统计）全部由 OpenCV `dnn` 模块完成。
 
-运行效果见仓库根目录的 `运行效果视频.mp4`。
+运行方式：打开对应 `.sln` 编译后直接运行——图片工程会检测 `person.jpg` 并弹窗显示结果，
+视频工程会打开本机摄像头做实时检测，窗口内按任意键退出。
+
+> 仓库不含演示视频与模型权重，克隆后请按「快速开始 → 放入模型权重」准备模型。
 
 ---
 
@@ -37,7 +40,6 @@ YOLO-By-C++/
 │       └── （同上 4 个模型的 .cfg）
 │
 ├── archive/                             # 开发过程中的历史版本，仅作参考，不参与编译
-├── 运行效果视频.mp4
 ├── 项目说明.txt
 └── README.md
 ```
@@ -128,6 +130,18 @@ YOLO yolo_model(yolo_nets[2]);   // 0=yolov3  1=yolov4  2=yolo-fastest  3=yolobi
 
 两个工程的 `yolo.h` 与检测逻辑完全一致，只是 `main()` 中的输入源不同。
 
+### 视频工程：摄像头序号
+
+默认打开 **0 号摄像头**。若机器有多个摄像头或默认索引不对，可用命令行参数指定：
+
+```bat
+:: 项目属性 → 调试 → 命令参数 里填 1，或直接命令行运行
+"YOLO by C++.exe" 1
+```
+
+程序内部会按 `MSMF → DirectShow → 自动` 三种后端、`0~5` 号设备依次尝试，
+成功后会打印实际使用的序号与后端，例如 `Camera opened: index=0, backend=DirectShow`。
+
 ---
 
 ## 模型权重获取
@@ -146,6 +160,15 @@ YOLO yolo_model(yolo_nets[2]);   // 0=yolov3  1=yolov4  2=yolo-fastest  3=yolobi
 ---
 
 ## 常见问题
+
+**Q：运行报 `global obsensor_uvc_stream_channel.cpp cv::obsensor::getStreamChannelGroup Camera index out of range` + `Cannot open camera`**
+OpenCV 4.9 在 Windows 上的典型问题：MSMF 后端打不开默认摄像头，日志里的 `obsensor` 只是它在盲探设备，不是真的没摄像头。
+本工程已做自动兜底（依次尝试 MSMF / DirectShow / 自动 后端，并扫描 0~5 号设备），若仍失败请依次检查：
+
+1. 摄像头被占用——相机 App、微信、腾讯会议、浏览器网页等会独占设备；
+2. `设置 → 隐私和安全性 → 相机` 中允许「桌面应用访问相机」；
+3. 设备管理器 → 摄像头，确认设备存在且未被禁用；
+4. 手动指定序号：`"YOLO by C++.exe" 1`。
 
 **Q：编译报 `无法打开源文件 "opencv2/dnn.hpp"`**
 `OpenCV_DIR` 没设对。确认该变量指向 `...\opencv\build`，且该目录下存在 `include\opencv2\dnn.hpp`。
