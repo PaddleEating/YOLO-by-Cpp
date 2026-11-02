@@ -2,6 +2,8 @@
 
 [English](README.md) | **简体中文**
 
+> 山东大学 控制科学与工程学院 2024 年《面向对象的程序设计》课程作业
+
 基于 **OpenCV DNN + C++** 的 YOLO 目标检测示例，包含两个 Visual Studio 工程：
 
 - **YOLO by C++ using pictures** —— 对**静态图片**做目标检测

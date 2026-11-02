@@ -2,6 +2,9 @@
 
 [简体中文](README.zh-CN.md) | **English**
 
+> Course assignment for **Object-Oriented Programming** (2024),
+> School of Control Science and Engineering, Shandong University.
+
 Real-time object detection with **YOLO + OpenCV DNN in C++**, shipped as two Visual Studio projects:
 
 - **YOLO by C++ using pictures** — object detection on **static images**
