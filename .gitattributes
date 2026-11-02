@@ -1,0 +1,10 @@
+# 统一按文本处理，源码均为 UTF-8（含 BOM），GitHub 上中文注释不会乱码
+* text=auto
+
+# 二进制文件，禁止换行符转换
+*.jpg     binary
+*.png     binary
+*.mp4     binary
+*.weights binary
+*.exe     binary
+*.lib     binary
