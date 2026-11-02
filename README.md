@@ -1,88 +1,95 @@
 # YOLO-By-C++
 
-**简体中文** | [English](README_EN.md)
+[简体中文](README.zh-CN.md) | **English**
 
-基于 **OpenCV DNN + C++** 的 YOLO 目标检测示例，包含两个 Visual Studio 工程：
+Real-time object detection with **YOLO + OpenCV DNN in C++**, shipped as two Visual Studio projects:
 
-- **YOLO by C++ using pictures** —— 对**静态图片**做目标检测
-- **YOLO by C++ using video** —— 调用**电脑摄像头**做实时视频目标检测
+- **YOLO by C++ using pictures** — object detection on **static images**
+- **YOLO by C++ using video** — **webcam** object detection on a live video stream
 
-支持 YOLOv3 / YOLOv4 / YOLOv4-tiny / YOLObile / YOLO-Fastest 五种模型，纯 CPU 推理，无需 CUDA。
-推理与后处理（NMS、置信度过滤、耗时统计）全部由 OpenCV `dnn` 模块完成。
+Five model variants are supported: YOLOv3 / YOLOv4 / YOLOv4-tiny / YOLObile / YOLO-Fastest.
+Everything runs on CPU — no CUDA required. Inference and post-processing (NMS, confidence
+thresholding, timing) are handled entirely by the OpenCV `dnn` module.
 
-运行方式：打开对应 `.sln` 编译后直接运行——图片工程会检测 `person.jpg` 并弹窗显示结果，
-视频工程会打开本机摄像头做实时检测，窗口内按任意键退出。
+How to run: build the `.sln` and launch it. The pictures project detects `person.jpg` and
+shows the result in a window; the video project opens your webcam and runs detection live —
+press any key while the window is focused to quit.
 
-> 仓库不含演示视频与模型权重，克隆后请按「快速开始 → 放入模型权重」准备模型。
+> **The repository ships without demo video or model weights.** After cloning, follow
+> "Quick Start → 2. Add the model weights" to prepare the models.
 
 ---
 
-## 目录结构
+## Repository layout
 
 ```
 YOLO-By-C++/
-├── YOLO by C++ using pictures/          # 图片检测工程
-│   ├── YOLO by OpenCV.sln               # 解决方案
+├── YOLO by C++ using pictures/          # Image detection project
+│   ├── YOLO by OpenCV.sln               # Solution
 │   └── YOLO by OpenCV/
-│       ├── main_yolo.cpp                # 源码入口（YOLO 类实现 + main）
-│       ├── yolo.h                       # 网络配置与 YOLO 类声明
-│       ├── coco.names                   # COCO 80 类标签
-│       ├── bus.jpg / dog.jpg / person.jpg / zidane.jpg   # 测试图片
+│       ├── main_yolo.cpp                # Entry point (YOLO class impl + main)
+│       ├── yolo.h                       # Net config & YOLO class declaration
+│       ├── coco.names                   # COCO 80 class labels
+│       ├── bus.jpg / dog.jpg / person.jpg / zidane.jpg   # Sample images
 │       ├── yolov3/yolov3.cfg
 │       ├── yolov4/yolov4.cfg, yolov4-tiny.cfg
 │       ├── yolobile/csdarknet53s-panet-spp.cfg
 │       └── yolo-fastest/yolo-fastest-xl.cfg
 │
-├── YOLO by C++ using video/             # 摄像头实时检测工程
+├── YOLO by C++ using video/             # Webcam detection project
 │   ├── YOLO by C++.sln
 │   └── YOLO by C++/
-│       ├── YOLO by C++.cpp              # 源码（VideoCapture(0) 打开摄像头）
+│       ├── YOLO by C++.cpp              # Source (opens camera via VideoCapture)
 │       ├── yolo.h
 │       ├── coco.names
-│       └── （同上 4 个模型的 .cfg）
+│       └── (the same 4 model .cfg files)
 │
-├── archive/                             # 开发过程中的历史版本，仅作参考，不参与编译
-├── 项目说明.txt                          # 项目说明（中文）
-├── README.md                            # 中文说明（本文件）
-└── README_EN.md                         # English README
+├── archive/                             # Historical versions, reference only, not compiled
+├── 项目说明.txt                          # Project notes (Chinese)
+├── README.md                            # English README (this file, GitHub default)
+└── README.zh-CN.md                      # Chinese README
 ```
 
-> **注意：`.weights` 权重文件未包含在仓库中**（单文件 200MB+，超出 GitHub 100MB 限制）。
-> 请按下文「模型权重」一节下载后放入对应目录。
+> **Note: `.weights` files are not tracked in this repository** — each is 200 MB+, beyond
+> GitHub's 100 MB per-file limit. Download them from the Releases page and drop them into
+> the directories listed below.
 
 ---
 
-## 环境要求
+## Requirements
 
-| 项目 | 版本 |
+| Item | Version |
 |---|---|
-| 操作系统 | Windows 10 / 11 |
-| 编译器 | Visual Studio 2022（v143 工具集，需勾选「使用 C++ 的桌面开发」） |
-| OpenCV | 4.9.0（`opencv_world` 单库版本，`x64/vc16` 构建） |
-| 平台 | 仅支持 **x64**（Win32 配置未配置 OpenCV 路径，请勿使用） |
+| OS | Windows 10 / 11 |
+| Compiler | Visual Studio 2022 (v143 toolset, "Desktop development with C++" workload) |
+| OpenCV | 4.9.0 (`opencv_world` single-lib build, `x64/vc16`) |
+| Platform | **x64 only** (the Win32 configurations have no OpenCV paths configured — do not use them) |
 
 ---
 
-## 快速开始
+## Quick start
 
-### 1. 配置 OpenCV 路径
+### 1. Point the project at your OpenCV
 
-工程中已通过 `$(OpenCV_DIR)` 变量引用 OpenCV，**默认值**为 `D:\OpenCV\opencv\build`。
-如果你的 OpenCV 装在别处，设置环境变量即可（无需改工程文件）：
+The projects reference OpenCV through the `$(OpenCV_DIR)` variable, whose **default** value is
+`D:\OpenCV\opencv\build`. If yours lives elsewhere, just set an environment variable — no need to
+touch the project files:
 
 ```powershell
-# 临时生效（当前终端）
+# Current session only
 $env:OpenCV_DIR = "C:\opencv\build"
 
-# 永久生效
+# Persist for the user account
 setx OpenCV_DIR "C:\opencv\build"
 ```
 
-> `OpenCV_DIR` 指向 OpenCV 安装包的 `build` 目录，其下应有 `include` 和 `x64\vc16\lib`。
+> `OpenCV_DIR` must point to the `build` directory of your OpenCV package, which should contain
+> `include` and `x64\vc16\lib`.
 
-### 2. 放入模型权重
+### 2. Add the model weights
 
-从 [Releases](../../releases) 页面下载权重文件，按下面的路径放置（两个工程各放一份）：
+Download the weights from the [Releases](../../releases) page and place them as follows
+(one copy per project — the two projects do not share files):
 
 ```
 YOLO by OpenCV/
@@ -93,106 +100,123 @@ YOLO by OpenCV/
 └── yolo-fastest/yolo-fastest-xl.weights
 ```
 
-**只需要用到的模型**即可，不必全部下载。例如只用 YOLO-Fastest，就只放
-`yolo-fastest/yolo-fastest-xl.weights`。
+You only need the models you actually use. If you only want YOLO-Fastest, place just
+`yolo-fastest/yolo-fastest-xl.weights`.
 
-### 3. 编译运行
+### 3. Build and run
 
-用 VS2022 打开 `.sln`，选择 `Release | x64`，按 `F5` 运行。
+Open the `.sln` in VS2022, select `Release | x64`, press `F5`.
 
-⚠️ 运行时若提示找不到 `opencv_world490.dll` / `opencv_world490d.dll`，
-把 `%OpenCV_DIR%\x64\vc16\bin` 加入系统 `PATH`，或把对应 dll 复制到 `.exe` 同目录。
+⚠️ If launching complains about a missing `opencv_world490.dll` / `opencv_world490d.dll`, add
+`%OpenCV_DIR%\x64\vc16\bin` to your system `PATH`, or copy the matching DLL next to the `.exe`.
 
-### 4. 更换推理模型
+### 4. Switch the inference model
 
-模型在 `yolo.h` 的 `yolo_nets[4]` 数组中定义，源码中通过下标选用：
+Models are declared in the `yolo_nets[4]` array in `yolo.h` and selected by index in the source:
 
 ```cpp
 YOLO yolo_model(yolo_nets[2]);   // 0=yolov3  1=yolov4  2=yolo-fastest  3=yolobile
 ```
 
-| 下标 | 模型 | 输入尺寸 | 权重体积 | 速度 | 精度 |
+| Index | Model | Input size | Weights | Speed | Accuracy |
 |---|---|---|---|---|---|
-| 0 | YOLOv3 | 416×416 | 236 MB | 慢 | 高 |
-| 1 | YOLOv4 | 608×608 | 245 MB | 最慢 | 最高 |
-| 2 | YOLO-Fastest-XL | 320×320 | 3.5 MB | **最快** | 较低 |
-| 3 | YOLObile | 320×320 | 245 MB | 快 | 较高 |
+| 0 | YOLOv3 | 416×416 | 236 MB | Slow | High |
+| 1 | YOLOv4 | 608×608 | 245 MB | Slowest | Highest |
+| 2 | YOLO-Fastest-XL | 320×320 | 3.5 MB | **Fastest** | Lower |
+| 3 | YOLObile | 320×320 | 245 MB | Fast | High |
 
-监控摄像头等实时场景建议用 `2`（默认值），单张图片追求精度可用 `1`。
+Use `2` (the default) for real-time camera streams; use `1` when you need maximum accuracy
+on a single image.
 
 ---
 
-## 两个工程的区别
+## Pictures vs. video project
 
-| | 图片工程 | 视频工程 |
+| | Pictures project | Video project |
 |---|---|---|
-| 输入 | `imread("person.jpg")` | `VideoCapture(0)` 摄像头 |
-| 输出 | 弹窗显示检测结果 | 逐帧实时显示 |
-| 源码 | `main_yolo.cpp` | `YOLO by C++.cpp` |
-| 换测试图 | 改 `main()` 里的 `imgpath` | 无需修改 |
+| Input | `imread("person.jpg")` | Webcam via `VideoCapture` |
+| Output | Single result window | Frame-by-frame live display |
+| Source file | `main_yolo.cpp` | `YOLO by C++.cpp` |
+| Change the test image | Edit `imgpath` in `main()` | Not applicable |
 
-两个工程的 `yolo.h` 与检测逻辑完全一致，只是 `main()` 中的输入源不同。
+Both projects share an identical `yolo.h` and detection logic; only the input source in
+`main()` differs.
 
-### 视频工程：摄像头序号
+### Video project: choosing a camera
 
-默认打开 **0 号摄像头**。若机器有多个摄像头或默认索引不对，可用命令行参数指定：
+The default is **camera index 0**. If your machine has multiple cameras or the default index is
+wrong, pass an index on the command line:
 
 ```bat
-:: 项目属性 → 调试 → 命令参数 里填 1，或直接命令行运行
+:: Set it under Project Properties -> Debugging -> Command Arguments, or run directly
 "YOLO by C++.exe" 1
 ```
 
-程序内部会按 `MSMF → DirectShow → 自动` 三种后端、`0~5` 号设备依次尝试，
-成功后会打印实际使用的序号与后端，例如 `Camera opened: index=0, backend=DirectShow`。
+Internally the program tries the `MSMF → DirectShow → Auto` backends against devices `0`–`5`
+in turn, and prints the combination that actually worked, e.g.
+`Camera opened: index=0, backend=DirectShow`.
 
 ---
 
-## 模型权重获取
+## Where to get the weights
 
-**方式一（推荐）**：本仓库 [Releases](../../releases) 页面的 `weights` 附件。
+**Option 1 (recommended):** the `weights` attachments on this repository's [Releases](../../releases) page.
 
-**方式二**：官方原始发布渠道
+**Option 2:** the upstream publishers
 
-- YOLOv3 / YOLOv4：<https://github.com/AlexeyAB/darknet#pre-trained-models>
-- YOLO-Fastest：<https://github.com/dog-qiuqiu/Yolo-Fastest>
-- YOLObile：<https://github.com/Coobird/YOLObile>
+- YOLOv3 / YOLOv4: <https://github.com/AlexeyAB/darknet#pre-trained-models>
+- YOLO-Fastest: <https://github.com/dog-qiuqiu/Yolo-Fastest>
+- YOLObile: <https://github.com/Coobird/YOLObile>
 
-上游教程提供的百度网盘打包（4 个模型文件夹，提取码 `imgu`）：
-<https://pan.baidu.com/s/1Kcw-VhuDTRzCtVkaNEDOBg>
-
----
-
-## 常见问题
-
-**Q：运行报 `global obsensor_uvc_stream_channel.cpp cv::obsensor::getStreamChannelGroup Camera index out of range` + `Cannot open camera`**
-OpenCV 4.9 在 Windows 上的典型问题：MSMF 后端打不开默认摄像头，日志里的 `obsensor` 只是它在盲探设备，不是真的没摄像头。
-本工程已做自动兜底（依次尝试 MSMF / DirectShow / 自动 后端，并扫描 0~5 号设备），若仍失败请依次检查：
-
-1. 摄像头被占用——相机 App、微信、腾讯会议、浏览器网页等会独占设备；
-2. `设置 → 隐私和安全性 → 相机` 中允许「桌面应用访问相机」；
-3. 设备管理器 → 摄像头，确认设备存在且未被禁用；
-4. 手动指定序号：`"YOLO by C++.exe" 1`。
-
-**Q：编译报 `无法打开源文件 "opencv2/dnn.hpp"`**
-`OpenCV_DIR` 没设对。确认该变量指向 `...\opencv\build`，且该目录下存在 `include\opencv2\dnn.hpp`。
-
-**Q：编译报 `LNK2019 无法解析的外部符号`**
-链接库不匹配：Debug 配置应链接 `opencv_world490d.lib`，Release 配置应链接 `opencv_world490.lib`（本工程已配好）。
-
-**Q：编译通过但运行闪退**
-多半是权重文件路径不对或缺失。`yolo.h` 中的路径是**相对路径**（如 `yolov4/yolov4.weights`），
-因此需要在「项目属性 → 调试 → 工作目录」为项目目录，或保证从项目目录启动程序。
-
-**Q：中文注释在 VS 里显示乱码**
-源码统一为 UTF-8 with BOM。若已用 GBK 打开，在 VS 中「文件 → 高级保存选项」改回 UTF-8 即可。
+The original tutorial also distributes all four model folders as one Baidu Pan archive
+(code `imgu`): <https://pan.baidu.com/s/1Kcw-VhuDTRzCtVkaNEDOBg>
 
 ---
 
-## 来源与致谢
+## Troubleshooting
 
-`yolo.h`、`main_yolo.cpp` 的核心实现来自网络公开教程 `yolov34-cpp-opencv-dnn`
-（包含 YOLOv3 / YOLOv4 / YOLO-Fastest / YOLObile 的 C++ 与 Python 两种实现），
-本项目在其基础上完成了工程整理、绝对路径可移植化改造、源码编码统一，
-并区分出「图片检测」与「摄像头实时检测」两个独立工程。
+**Q: Runtime error `cv::obsensor::getStreamChannelGroup Camera index out of range` followed by `Cannot open camera`**
 
-模型权重版权归各 YOLO 原作者所有，仅用于学习与研究。
+A well-known OpenCV 4.9 issue on Windows: the MSMF backend fails to open the default camera. The
+`obsensor` lines in the log are just the backend probing for devices — they do **not** mean no
+camera is present. This project already falls back automatically (MSMF / DirectShow / Auto backends,
+scanning devices 0–5). If it still fails, check in order:
+
+1. The camera is busy — the Camera app, WeChat, Tencent Meeting, a browser tab, etc. can hold it exclusively;
+2. `Settings → Privacy & security → Camera` allows "Let desktop apps access your camera";
+3. Device Manager → Cameras: the device exists and is not disabled;
+4. Try an explicit index: `"YOLO by C++.exe" 1`.
+
+**Q: Build error `cannot open source file "opencv2/dnn.hpp"`**
+
+`OpenCV_DIR` is wrong. Make sure it points to `...\opencv\build` and that
+`include\opencv2\dnn.hpp` exists inside it.
+
+**Q: Build error `LNK2019 unresolved external symbol`**
+
+Library mismatch: the Debug configuration must link `opencv_world490d.lib`, Release must link
+`opencv_world490.lib` (already configured in this project).
+
+**Q: Builds fine but crashes immediately at runtime**
+
+Usually a wrong or missing weights path. Paths in `yolo.h` are **relative**
+(e.g. `yolov4/yolov4.weights`), so the working directory must be the project directory —
+it already is when you press F5 in Visual Studio.
+
+**Q: Chinese comments show up as garbled text in Visual Studio**
+
+All sources are UTF-8 with BOM. If a file was opened as GBK, use `File → Advanced Save Options`
+and switch it back to UTF-8.
+
+---
+
+## Credits
+
+The core of `yolo.h` and `main_yolo.cpp` comes from the public tutorial project
+`yolov34-cpp-opencv-dnn` (C++ and Python implementations of YOLOv3 / YOLOv4 / YOLO-Fastest /
+YOLObile). This repository builds on it by cleaning up the project structure, removing
+hard-coded absolute paths, normalizing source encoding, and splitting the code into two
+self-contained projects (images / live camera).
+
+Model weights remain the property of their respective YOLO authors and are used here for
+learning and research purposes only.
