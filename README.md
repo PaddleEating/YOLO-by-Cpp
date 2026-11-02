@@ -1,5 +1,7 @@
 # YOLO-By-C++
 
+**简体中文** | [English](README_EN.md)
+
 基于 **OpenCV DNN + C++** 的 YOLO 目标检测示例，包含两个 Visual Studio 工程：
 
 - **YOLO by C++ using pictures** —— 对**静态图片**做目标检测
@@ -40,8 +42,9 @@ YOLO-By-C++/
 │       └── （同上 4 个模型的 .cfg）
 │
 ├── archive/                             # 开发过程中的历史版本，仅作参考，不参与编译
-├── 项目说明.txt
-└── README.md
+├── 项目说明.txt                          # 项目说明（中文）
+├── README.md                            # 中文说明（本文件）
+└── README_EN.md                         # English README
 ```
 
 > **注意：`.weights` 权重文件未包含在仓库中**（单文件 200MB+，超出 GitHub 100MB 限制）。
