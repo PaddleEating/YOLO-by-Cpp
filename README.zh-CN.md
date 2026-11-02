@@ -44,7 +44,6 @@ YOLO-By-C++/
 │       └── （同上 4 个模型的 .cfg）
 │
 ├── archive/                             # 开发过程中的历史版本，仅作参考，不参与编译
-├── 项目说明.txt                          # 项目说明（中文）
 ├── README.md                            # English README（GitHub 默认展示）
 └── README.zh-CN.md                      # 中文说明（本文件）
 ```

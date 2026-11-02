@@ -48,7 +48,6 @@ YOLO-By-C++/
 │       └── (the same 4 model .cfg files)
 │
 ├── archive/                             # Historical versions, reference only, not compiled
-├── 项目说明.txt                          # Project notes (Chinese)
 ├── README.md                            # English README (this file, GitHub default)
 └── README.zh-CN.md                      # Chinese README
 ```
